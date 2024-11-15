@@ -90,8 +90,7 @@ jobs:
     env:
       RESOURCE_GROUP: elisska-devops-aks-cluster
       CLUSTER_NAME: elisska-devops-aks-cluster
-      KUSTOMIZE_PATH: k8s/kustomization.yaml
-
+      KUSTOMIZE_PATH: k8s
     steps:
     - name: Check out code
       uses: actions/checkout@v2
