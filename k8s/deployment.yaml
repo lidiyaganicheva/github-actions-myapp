@@ -20,14 +20,4 @@ spec:
           ports:
             - name: http
               containerPort: 8050
-          livenessProbe:
-            httpGet:
-              path: /live
-              port: probe
-            initialDelaySeconds: 5
-            periodSeconds: 5
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: probe
-            periodSeconds: 5
+
