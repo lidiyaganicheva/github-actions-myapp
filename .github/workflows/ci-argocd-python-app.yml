@@ -160,6 +160,5 @@ jobs:
         manifests: ${{ steps.bake.outputs.manifestsBundle }}
         strategy: blue-green
         namespace: hello-gitops
-        images: |
-          $DOCKER_USERNAME/hello-gitops:latest
+
 
