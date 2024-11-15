@@ -166,7 +166,7 @@ jobs:
         namespace: hello-gitops
 
     - name: Set up kubectl
-        run: |
+      run: |
           az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }}
 
 
@@ -175,8 +175,8 @@ jobs:
         kubectl rollout status deployment/${{ env.GREEN_DEPLOYMENT}}
 
     - name: Switch Traffic to Green
-        if: success()
-        run: |
+      if: success()
+      run: |
           kubectl patch ingress/${{ env.INGRESS_NAME }} \
             --type='json' \
             -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "${{ env.GREEN_DEPLOYMENT }}"}]'
