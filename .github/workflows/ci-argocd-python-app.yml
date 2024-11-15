@@ -181,13 +181,9 @@ jobs:
             --type='json' \
             -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "${{ env.GREEN_DEPLOYMENT }}"}]'
 
-    - name: Switch Traffic To Green
-      if: success()
-      run: |
-        kubectl apply -f k8s/ingress-green.yaml
 
     - name: Scale down the blue deployment
-      if: sucess()
+      if: success()
       run: |
         kubectl scale deployment/${{ env.BLUE_DEPLOYMENT }} --replicas=0
 
