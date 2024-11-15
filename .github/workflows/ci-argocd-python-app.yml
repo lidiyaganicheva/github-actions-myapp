@@ -91,6 +91,10 @@ jobs:
       RESOURCE_GROUP: elisska-devops-aks-cluster
       CLUSTER_NAME: elisska-devops-aks-cluster
       KUSTOMIZE_PATH: k8s
+      GREEN_DEPLOYMENT: hello-gitops-green
+      BLUE_DEPLOYMENT: hello-gitops
+      INGRESS_NAME: hello-gitops
+
     steps:
     - name: Check out code
       uses: actions/checkout@v2
@@ -160,5 +164,34 @@ jobs:
         manifests: ${{ steps.bake.outputs.manifestsBundle }}
         strategy: blue-green
         namespace: hello-gitops
+
+    - name: Set up kubectl
+        run: |
+          az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }}
+
+
+    - name: Health Check For Green Deployment
+      run: |
+        kubectl rollout status deployment/${{ env.GREEN_DEPLOYMENT}}
+
+    - name: Switch Traffic to Green
+        if: success()
+        run: |
+          kubectl patch ingress/${{ env.INGRESS_NAME }} \
+            --type='json' \
+            -p='[{"op": "replace", "path": "/spec/rules/0/http/paths/0/backend/service/name", "value": "${{ env.GREEN_DEPLOYMENT }}"}]'
+
+    - name: Switch Traffic To Green
+      if: success()
+      run: |
+        kubectl apply -f k8s/ingress-green.yaml
+
+    - name: Scale down the blue deployment
+      if: sucess()
+      run: |
+        kubectl scale deployment/${{ env.BLUE_DEPLOYMENT }} --replicas=0
+
+
+
 
 
