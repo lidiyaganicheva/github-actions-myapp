@@ -172,7 +172,7 @@ jobs:
 
     - name: Health Check For Green Deployment
       run: |
-        kubectl rollout status deployment/${{ env.GREEN_DEPLOYMENT}}
+        kubectl rollout status deployment.apps/${{ env.GREEN_DEPLOYMENT}}
 
     - name: Switch Traffic to Green
       if: success()
@@ -185,7 +185,7 @@ jobs:
     - name: Scale down the blue deployment
       if: success()
       run: |
-        kubectl scale deployment/${{ env.BLUE_DEPLOYMENT }} --replicas=0
+        kubectl scale deployment.apps/${{ env.BLUE_DEPLOYMENT }} --replicas=0
 
 
 
