@@ -4,8 +4,7 @@ metadata:
   name: hello-gitops
 spec:
   rules:
-    - host: localhost
-      http:
+    - http:
         paths:
           - path: /
             pathType: Prefix
