@@ -166,7 +166,7 @@ jobs:
         strategy: blue-green
         namespace: hello-gitops
         route-method: ingress
-        version-switch-buffer: 15
+        version-switch-buffer: 30s
 
     - name: Create workloads and configurations without -green suffix (if deploy successful)
       uses: Azure/k8s-deploy@v4
@@ -177,7 +177,7 @@ jobs:
         strategy: blue-green
         namespace: hello-gitops
         route-method: ingress
-        version-switch-buffer: 15
+        version-switch-buffer: 30s
 
     - name: Delete green workloads and route traffic back (if deploy fails)
       uses: Azure/k8s-deploy@v4
@@ -188,7 +188,7 @@ jobs:
         strategy: blue-green
         namespace: hello-gitops
         route-method: ingress
-        version-switch-buffer: 15
+        version-switch-buffer: 30s
 
     
         
