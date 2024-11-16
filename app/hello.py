@@ -1,15 +1,22 @@
 import configparser
 from flask import Flask
+import os
 
 config = configparser.RawConfigParser()
 config.read('config.properties')
 
 app = Flask(__name__)
 
+
+f = open('/etc/hostname')
+pod_name = f.read()
+f.close()
+
+
 if config.getboolean("features", "feature_1") == True:
-	message = "Hello, Sasha!"
+	message = f"Hello, Sasha! Current pod name: {pod_name}"
 else:
-	message = "Hello, World!"
+	message = f"Hello, World! Current pod name: {pod_name}"
 
 @app.route("/")
 def hello():
