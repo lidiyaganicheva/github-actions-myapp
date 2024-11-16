@@ -8,4 +8,4 @@ namespace: hello-gitops
 images:
 - name: hello-gitops
   newName: lidiyahanicheva/hello-gitops
-  newTag: 8aed2e1a5150319869831f3729d9d5e1c68d7e0a
+  newTag: 40535e04d6ce0f42864e738b01bbc387d3f14d4e
