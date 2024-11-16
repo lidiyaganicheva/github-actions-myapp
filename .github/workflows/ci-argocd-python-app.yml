@@ -158,6 +158,7 @@ jobs:
 
     # Deploys application based on manifest files from previous step
     - name: Deploy application
+      id: deploy-app
       uses: Azure/k8s-deploy@v4
       with:
         action: deploy
@@ -166,19 +167,19 @@ jobs:
         namespace: hello-gitops
         route-method: ingress
 
-    # - name: Promote App
-    #   uses: Azure/k8s-deploy@v4
-    #   if: success()
-    #   with:
-    #     action: promote
-    #     manifests: ${{ steps.bake.outputs.manifestsBundle }}
-    #     strategy: blue-green
-    #     namespace: hello-gitops
-    #     route-method: ingress
-
-    - name: Reject App
+    - name: Create workloads and configurations without -green suffix (if deploy successful)
       uses: Azure/k8s-deploy@v4
-      if: success()
+      if: steps.deploy-app.outcome == 'success'
+      with:
+        action: promote
+        manifests: ${{ steps.bake.outputs.manifestsBundle }}
+        strategy: blue-green
+        namespace: hello-gitops
+        route-method: ingress
+
+    - name: Delete green workloads and route traffic back (if deploy fails)
+      uses: Azure/k8s-deploy@v4
+      if: steps.deploy-app.outcome == 'failure'
       with:
         action: reject
         manifests: ${{ steps.bake.outputs.manifestsBundle }}
