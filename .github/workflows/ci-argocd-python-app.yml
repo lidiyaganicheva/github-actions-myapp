@@ -166,15 +166,15 @@ jobs:
         namespace: hello-gitops
         route-method: ingress
 
-    - name: Promote App
-      uses: Azure/k8s-deploy@v4
-      if: success()
-      with:
-        action: promote
-        manifests: ${{ steps.bake.outputs.manifestsBundle }}
-        strategy: blue-green
-        namespace: hello-gitops
-        route-method: ingress
+    # - name: Promote App
+    #   uses: Azure/k8s-deploy@v4
+    #   if: success()
+    #   with:
+    #     action: promote
+    #     manifests: ${{ steps.bake.outputs.manifestsBundle }}
+    #     strategy: blue-green
+    #     namespace: hello-gitops
+    #     route-method: ingress
 
     # - name: Reject App
     #   uses: Azure/k8s-deploy@v4
