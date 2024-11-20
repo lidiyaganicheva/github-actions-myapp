@@ -109,28 +109,20 @@ jobs:
         python -m pip install --upgrade pip
         pip install shyaml
 
-    - name: Set env variable for blue namespace name
+    - name: Set env variable for pod names
       run: |
         set -e
         cd ${{ env.KUSTOMIZE_PATH }}
-        echo "BLUE_NAMESPACE=$(shyaml get-value namespace < kustomization.yaml)" >> $GITHUB_ENV
-        newName=$(shyaml get-value images.0.newName < kustomization.yaml)
-        newTag=$(shyaml get-value images.0.newTag < kustomization.yaml)
-        echo "BLUE_IMAGE=${newName}:${newTag}" >> $GITHUB_ENV
-        
-        if [ "$BLUE_NAMESPACE" = "hello-gitops-green" ]; then
-          echo "GREEN_NAMESPACE=hello-gitops-blue" >> $GITHUB_ENV
-        else
-          echo "GREEN_NAMESPACE=hello-gitops-green" >> $GITHUB_ENV
-        fi
+        echo "BLUE_PREFIX=$(shyaml get-value namespace < kustomization_v1.yaml)" >> $GITHUB_ENV
+        echo "GREEN_PREFIX=$(shyaml get-value namespace < kustomization_v2.yaml)" >> $GITHUB_ENV
+
 
 
     - name: Check env variables
       run: |
         set -e
-        echo $BLUE_NAMESPACE
-        echo $BLUE_IMAGE
-        echo $GREEN_NAMESPACE
+        echo $BLUE_PREFIX
+        echo $GREEN_PREFIX
 
 
     - name: Update Kubernetes resources 
@@ -138,99 +130,121 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
        cd ${{ env.KUSTOMIZE_PATH }}
-       kustomize edit set namespace hello-gitops
-       kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
-       kustomize edit set namespace ${{ evn.GREEN_NAMESPACE }}
-       cat kustomization.yaml
+       kustomize edit --kustomization kustomization_v2 set namespace hello-gitops
+       kustomize edit --kustomization kustomization_v2 set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
+       cat kustomization_v2.yaml
        
-
-
         
-    # - name: Commit files
-    #   run: |
-    #     git config --local user.email "action@github.com"
-    #     git config --local user.name "GitHub Action"
-    #     git commit -am "Bump docker tag"
+    - name: Commit files
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git commit -am "Bump docker tag"
 
-    # - name: Push changes
-    #   uses: ad-m/github-push-action@master
-    #   with:
-    #     github_token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    #   # Logs in with your Azure credentials
-    # - name: Azure login
-    #   id: azure-login
-    #   uses: azure/login@v1.4.6
-    #   with:
-    #     client-id: ${{ secrets.AZURE_CLIENT_ID }}
-    #     tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-    #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      # Logs in with your Azure credentials
+    - name: Azure login
+      id: azure-login
+      uses: azure/login@v1.4.6
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    # # Use kubelogin to configure your kubeconfig for Azure auth
-    # - name: Set up kubelogin for non-interactive login
-    #   uses: azure/use-kubelogin@v1
-    #   with:
-    #     kubelogin-version: 'v0.0.25'
+    # Use kubelogin to configure your kubeconfig for Azure auth
+    - name: Set up kubelogin for non-interactive login
+      uses: azure/use-kubelogin@v1
+      with:
+        kubelogin-version: 'v0.0.25'
 
-    # # Retrieves your Azure Kubernetes Service cluster's kubeconfig file
-    # - name: Get K8s context
-    #   uses: azure/aks-set-context@v3
-    #   with:
-    #     resource-group: ${{ env.RESOURCE_GROUP }}
-    #     cluster-name: ${{ env.CLUSTER_NAME }}
-    #     admin: 'false'
-    #     use-kubelogin: 'true'
+    # Retrieves your Azure Kubernetes Service cluster's kubeconfig file
+    - name: Get K8s context
+      uses: azure/aks-set-context@v3
+      with:
+        resource-group: ${{ env.RESOURCE_GROUP }}
+        cluster-name: ${{ env.CLUSTER_NAME }}
+        admin: 'false'
+        use-kubelogin: 'true'
 
 
-    # # Runs Kustomize to create manifest files for v2
-    # - name: Bake deployment
-    #   uses: azure/k8s-bake@v2
-    #   with:
-    #     renderEngine: "kustomize"
-    #     kustomizationPath: ${{ env.KUSTOMIZE_PATH }}
-    #     kubectl-version: latest
-    #   id: bake
+    # Runs Kustomize to create manifest files for v2
+    - name: Bake deployment
+      uses: azure/k8s-bake@v2
+      with:
+        renderEngine: "kustomize"
+        customPath: ${{ env.KUSTOMIZE_PATH }}/kustomization_v2.yaml
+        kustomizationPath: ${{ env.KUSTOMIZE_PATH }}
+        kubectl-version: latest
+      id: bake
 
-    # - name: Create green workloads and configurations 
-    #   id: promote-app
-    #   uses: Azure/k8s-deploy@v4
-    #   with:
-    #     action: promote
-    #     manifests: ${{ steps.bake.outputs.manifestsBundle }}
-    #     strategy: blue-green
-    #     namespace: ${{ env.GREEN_NAMESPACE}}
-    #     route-method: ingress
-    #     version_switch_buffer: 0.5
+    - name: Create green workloads and configurations 
+      id: promote-app
+      uses: Azure/k8s-deploy@v4
+      with:
+        action: promote
+        manifests: ${{ steps.bake.outputs.manifestsBundle }}
+        strategy: blue-green
+        namespace: hello-gitops
+        route-method: ingress
+        version_switch_buffer: 0.5
 
-    # # - name: Update Kubernetes resources (if green deployment su)
-    # #   env:
-    # #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-    # #   run: |
-    # #    cd ${{ env.KUSTOMIZE_PATH }}
-    # #    kustomize edit set namespace hello-gitops
-    # #    kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
-    # #    cat kustomization.yaml
 
-    # # Runs Kustomize to create manifest files for v_1 
-    # - name: Bake deployment (if green deploy fails)
-    #   if: steps.promote-app.outcome == 'failure'
-    #   uses: azure/k8s-bake@v2
-    #   with:
-    #     renderEngine: "kustomize"
-    #     kustomizationPath: ${{ env.KUSTOMIZE_PATH }}
-    #     kubectl-version: latest
-    #   id: bake_v1
+  # If promotion is successful edit kustomize files
+    - name: Update Kubernetes resources 
+      if: steps.promote-app.outcome == 'success'
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      run: |
+       cd ${{ env.KUSTOMIZE_PATH }}
+       kustomize edit --kustomization kustomization_v1 set namespace hello-gitops
+       kustomize edit --kustomization kustomization_v1 set namePrefix ${{ env.GREEN_PREFIX}}
+       kustomize edit --kustomization kustomization_v1 set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
+       cat kustomization_v1.yaml
+       kustomize edit --kustomization kustomization_v2 set namePrefix ${{ env.BLUE_PREFIX}}
+       cat kustomization_v2.yaml
 
-    # - name: Delete green workloads and route traffic back (if green deploy fails)
-    #   uses: Azure/k8s-deploy@v4
-    #   if: steps.promote-app.outcome == 'failure'
-    #   with:
-    #     action: reject
-    #     manifests: ${{ steps.bake_v1.outputs.manifestsBundle }}
-    #     strategy: blue-green
-    #     namespace: hello-gitops
-    #     route-method: ingress
-    #     version-switch-buffer: 0.5
+    - name: Commit files
+      if: steps.promote-app.outcome == 'success'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git commit -am "Bump docker tag"
+
+    - name: Push changes
+      if: steps.promote-app.outcome == 'success'
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+  
+
+  # Next steps are applied if green deployment failed
+
+    # Runs Kustomize to create manifest files for v_1 
+    - name: Bake deployment 
+      id: bake_rollback
+      if: steps.promote-app.outcome == 'failure'
+      uses: azure/k8s-bake@v2
+      with:
+        renderEngine: "kustomize"
+        customPath: ${{ env.KUSTOMIZE_PATH }}/kustomization_v1.yaml
+        kustomizationPath: ${{ env.KUSTOMIZE_PATH }}
+        kubectl-version: latest
+      
+
+    - name: Delete green workloads and route traffic back (if green deploy fails)
+      uses: Azure/k8s-deploy@v4
+      if: steps.promote-app.outcome == 'failure'
+      with:
+        action: reject
+        manifests: ${{ steps.bake_rollback.outputs.manifestsBundle }}
+        strategy: blue-green
+        namespace: hello-gitops
+        route-method: ingress
+        version-switch-buffer: 0.5
 
     
         
