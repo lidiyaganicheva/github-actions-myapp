@@ -119,9 +119,9 @@ jobs:
         echo "BLUE_IMAGE=${newName}:${newTag}" >> $GITHUB_ENV
         
         if [ "$BLUE_NAMESPACE" = "hello-gitops-green" ]; then
-          echo "GREEN_NAMESPACE=\"hello-gitops-blue\"" >> $GITHUB_ENV
+          echo "GREEN_NAMESPACE=hello-gitops-blue" >> $GITHUB_ENV
         else
-          echo "GREEN_NAMESPACE=\"hello-gitops-green\"" >> $GITHUB_ENV
+          echo "GREEN_NAMESPACE=hello-gitops-green" >> $GITHUB_ENV
         fi
 
 
