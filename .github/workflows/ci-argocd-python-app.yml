@@ -135,7 +135,7 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
        cd ${{ env.KUSTOMIZE_PATH_V2 }}
-       kustomize edit set namespace ${{ env.${{ github.workspace }} }}
+       kustomize edit set namespace ${{ env.NAMESPACE_NAME }}
        kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
        cat kustomization.yaml
        
