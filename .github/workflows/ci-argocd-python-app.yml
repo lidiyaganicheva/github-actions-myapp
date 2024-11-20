@@ -102,6 +102,7 @@ jobs:
     - name: Set env variable for blue namespace name
       run: |
         set -e
+        cd ${{ env.KUSTOMIZE_PATH }}
         echo "BLUE_NAMESPACE=$(shyaml get-value namespace < kustomization.yaml)" >> $GITHUB_ENV
         echo "BLUE_IMAGE=$(shyaml get-value images.newName:images.newTag < kustomization.yaml)" >> $GITHUB_ENV
         
