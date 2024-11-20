@@ -25,16 +25,16 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v2
-      with:
-        python-version: "3.10"
+    # - name: Set up Python 3.10
+    #   uses: actions/setup-python@v2
+    #   with:
+    #     python-version: "3.10"
         
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    # - name: Install dependencies
+    #   run: |
+    #     python -m pip install --upgrade pip
+    #     pip install flake8 pytest
+    #     if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     
   #   - name: Lint with flake8
   #     run: |
@@ -88,7 +88,8 @@ jobs:
     env:
       RESOURCE_GROUP: elisska-devops-aks-cluster
       CLUSTER_NAME: elisska-devops-aks-cluster
-      KUSTOMIZE_PATH: k8s
+      KUSTOMIZE_PATH_V1: ../k8s_v1
+      KUSTOMIZE_PATH_V2: ../k8s_v2
 
     steps:
     - name: Check out code
@@ -112,9 +113,10 @@ jobs:
     - name: Set env variable for pod names
       run: |
         set -e
-        cd ${{ env.KUSTOMIZE_PATH }}
-        echo "BLUE_PREFIX=$(shyaml get-value namespace < kustomization_v1.yaml)" >> $GITHUB_ENV
-        echo "GREEN_PREFIX=$(shyaml get-value namespace < kustomization_v2.yaml)" >> $GITHUB_ENV
+        cd ${{ env.KUSTOMIZE_PATH_V1 }}
+        echo "BLUE_PREFIX=$(shyaml get-value namespace < kustomization.yaml)" >> $GITHUB_ENV
+        cd ${{ env.KUSTOMIZE_PATH_V2 }}
+        echo "GREEN_PREFIX=$(shyaml get-value namespace < kustomization.yaml)" >> $GITHUB_ENV
 
 
 
@@ -129,10 +131,10 @@ jobs:
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
-       cd ${{ env.KUSTOMIZE_PATH }}
-       kustomize edit --kustomization kustomization_v2 set namespace hello-gitops
-       kustomize edit --kustomization kustomization_v2 set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
-       cat kustomization_v2.yaml
+       cd ${{ env.KUSTOMIZE_PATH_V2 }}
+       kustomize edit set namespace hello-gitops
+       kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
+       cat kustomization.yaml
        
         
     - name: Commit files
@@ -176,8 +178,7 @@ jobs:
       uses: azure/k8s-bake@v2
       with:
         renderEngine: "kustomize"
-        customPath: ${{ env.KUSTOMIZE_PATH }}/kustomization_v2.yaml
-        kustomizationPath: ${{ env.KUSTOMIZE_PATH }}
+        kustomizationPath: ${{ env.KUSTOMIZE_PATH_V2 }}
         kubectl-version: latest
       id: bake
 
@@ -199,13 +200,14 @@ jobs:
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
-       cd ${{ env.KUSTOMIZE_PATH }}
-       kustomize edit --kustomization kustomization_v1 set namespace hello-gitops
-       kustomize edit --kustomization kustomization_v1 set namePrefix ${{ env.GREEN_PREFIX}}
-       kustomize edit --kustomization kustomization_v1 set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
-       cat kustomization_v1.yaml
-       kustomize edit --kustomization kustomization_v2 set namePrefix ${{ env.BLUE_PREFIX}}
-       cat kustomization_v2.yaml
+       cd ${{ env.KUSTOMIZE_PATH_V1 }}
+       kustomize edit set namespace hello-gitops
+       kustomize edit set namePrefix ${{ env.GREEN_PREFIX}}
+       kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
+       cat kustomization.yaml
+       cd ${{ env.KUSTOMIZE_PATH_V2 }}
+       kustomize edit set namePrefix ${{ env.BLUE_PREFIX}}
+       cat kustomization.yaml
 
     - name: Commit files
       if: steps.promote-app.outcome == 'success'
@@ -225,14 +227,13 @@ jobs:
 
     # Runs Kustomize to create manifest files for v_1 
     - name: Bake deployment 
-      id: bake_rollback
       if: steps.promote-app.outcome == 'failure'
       uses: azure/k8s-bake@v2
       with:
         renderEngine: "kustomize"
-        customPath: ${{ env.KUSTOMIZE_PATH }}/kustomization_v1.yaml
-        kustomizationPath: ${{ env.KUSTOMIZE_PATH }}
+        kustomizationPath: ${{ env.KUSTOMIZE_PATH_V1 }}
         kubectl-version: latest
+      id: bake_rollback
       
 
     - name: Delete green workloads and route traffic back (if green deploy fails)
