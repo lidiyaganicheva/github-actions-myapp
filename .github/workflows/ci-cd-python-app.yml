@@ -91,7 +91,6 @@ jobs:
       KUSTOMIZE_PATH_V1: ${{ github.workspace }}/k8s_v1
       KUSTOMIZE_PATH_V2: ${{ github.workspace }}/k8s_v2
       NAMESPACE_NAME: hello-gitops
-      SERVICE_HOST: http://74.248.84.192/
 
     steps:
     - name: Check out code
@@ -190,7 +189,7 @@ jobs:
        kubectl apply -k ${{ env.KUSTOMIZE_PATH_V2 }}
 
 
-    # Check if second deployment healthy
+    # Check if green deployment healthy
     - name: Health Check for Green Deployment
       id: health-check-green
       run: |
@@ -198,11 +197,6 @@ jobs:
         kubectl rollout status deployment/${{ env.GREEN_PREFIX }}hello-gitops -n ${{ env.NAMESPACE_NAME }}
         echo steps.health-check-green.outcome
 
-    # Test if the second deployment was successful
-        - name: Test second deployment
-        run: |
-          while sleep 0.1
-          do curl ${{ env.SERVICE_HOST }}
 
     # If green deployment is ok - scale down the blue deployment
     - name: Delete the Blue Deployment
