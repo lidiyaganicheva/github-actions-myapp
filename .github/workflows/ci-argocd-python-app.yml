@@ -88,8 +88,8 @@ jobs:
     env:
       RESOURCE_GROUP: elisska-devops-aks-cluster
       CLUSTER_NAME: elisska-devops-aks-cluster
-      KUSTOMIZE_PATH_V1: ../k8s_v1
-      KUSTOMIZE_PATH_V2: ../k8s_v2
+      KUSTOMIZE_PATH_V1: github-actions-myapp/k8s_v1
+      KUSTOMIZE_PATH_V2: github-actions-myapp/k8s_v2
 
     steps:
     - name: Check out code
@@ -125,6 +125,7 @@ jobs:
         set -e
         echo $BLUE_PREFIX
         echo $GREEN_PREFIX
+        echo pwd
 
 
     - name: Update Kubernetes resources 
