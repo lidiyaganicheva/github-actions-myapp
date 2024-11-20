@@ -199,10 +199,10 @@ jobs:
         echo steps.health-check-green.outcome
 
     # Test if the second deployment was successful
-        - name: Test second deployment
-        run: |
-          while sleep 0.1
-          do curl ${{ env.SERVICE_HOST }}
+    - name: Test second deployment
+      run: |
+        while sleep 0.1
+        do curl ${{ env.SERVICE_HOST }}
 
     # If green deployment is ok - scale down the blue deployment
     - name: Delete the Blue Deployment
