@@ -14,27 +14,27 @@ permissions:
   contents: write
 
 jobs:
-  # build:
+  build:
 
-  #   runs-on: ubuntu-latest
-  #   defaults:
-  #     run:
-  #       working-directory: ./app
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./app
 
-  #   steps:
-  #   - name: Checkout repository
-  #     uses: actions/checkout@v3
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
       
-  #   - name: Set up Python 3.10
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: "3.10"
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.10"
         
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install flake8 pytest
-  #       if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest shyaml
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     
   #   - name: Lint with flake8
   #     run: |
@@ -101,14 +101,15 @@ jobs:
 
     - name: Set env variable for blue namespace name
       run: |
-        pip install shyaml
         echo "BLUE_NAMESPACE=$(shyaml get-value namespace < kustomization.yaml)" >> $GITHUB_ENV
         echo "BLUE_IMAGE=$(syaml get-value images.newName:images.newTage < kustomization.yaml)" >> $GITHUB_ENV
         if [$BLUE_NAMESPACE = "hello-gitops-green"]
-        then
-          echo "GREEN_NAMESPACE="\""hello-gitops-blue"\""" >> $GITHUB_ENV
+         then echo "GREEN_NAMESPACE="\""hello-gitops-blue"\""" >> $GITHUB_ENV
         else
           echo "GREEN_NAMESPACE="\""hello-gitops-green"\""" >> $GITHUB_ENV
+        fi
+
+
 
       - name: Test
         run:|
