@@ -113,7 +113,7 @@ jobs:
 
 
 
-      - name: Test
+    - name: Test
         run:|
         echo $BLUE_NAMESPACE
         echo $BLUE_IMAGE
