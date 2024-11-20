@@ -101,12 +101,14 @@ jobs:
 
     - name: Set env variable for blue namespace name
       run: |
+        set -e
         echo "BLUE_NAMESPACE=$(shyaml get-value namespace < kustomization.yaml)" >> $GITHUB_ENV
-        echo "BLUE_IMAGE=$(syaml get-value images.newName:images.newTage < kustomization.yaml)" >> $GITHUB_ENV
-        if [$BLUE_NAMESPACE = "hello-gitops-green"]
-         then echo "GREEN_NAMESPACE="\""hello-gitops-blue"\""" >> $GITHUB_ENV
+        echo "BLUE_IMAGE=$(shyaml get-value images.newName:images.newTag < kustomization.yaml)" >> $GITHUB_ENV
+        
+        if [ "$BLUE_NAMESPACE" = "hello-gitops-green" ]; then
+          echo "GREEN_NAMESPACE=\"hello-gitops-blue\"" >> $GITHUB_ENV
         else
-          echo "GREEN_NAMESPACE="\""hello-gitops-green"\""" >> $GITHUB_ENV
+          echo "GREEN_NAMESPACE=\"hello-gitops-green\"" >> $GITHUB_ENV
         fi
 
 
