@@ -135,7 +135,7 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
        cd ${{ env.KUSTOMIZE_PATH_V2 }}
-       kustomize edit set namespace ${{ NAMESPACE_NAME }}
+       kustomize edit set namespace ${{ env.${{ github.workspace }} }}
        kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
        cat kustomization.yaml
        
@@ -203,7 +203,7 @@ jobs:
       id: health-check-green
       run: |
         # Wait for the green deployment to roll out successfully
-        kubectl rollout status deployment/${{ env.GREEN_PREFIX }}hello-gitops -n ${{ NAMESPACE_NAME }}
+        kubectl rollout status deployment/${{ env.GREEN_PREFIX }}hello-gitops -n ${{ env.NAMESPACE_NAME }}
         echo steps.health-check-green.outcome
 
 
@@ -249,7 +249,7 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
        cd ${{ env.KUSTOMIZE_PATH_V1 }}
-       kustomize edit set namespace ${{ NAMESPACE_NAME }}
+       kustomize edit set namespace ${{ env.NAMESPACE_NAME }}
        kustomize edit set namePrefix ${{ env.GREEN_PREFIX}}
        kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
        cat kustomization.yaml
