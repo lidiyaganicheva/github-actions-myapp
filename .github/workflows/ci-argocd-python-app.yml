@@ -223,14 +223,14 @@ jobs:
        cat kustomization.yaml
 
     - name: Commit files
-      if: steps.promote-app.outcome == 'success'
+      if: steps.health-check-green.outcome == 'success'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git commit -am "Bump docker tag"
 
     - name: Push changes
-      if: steps.promote-app.outcome == 'success'
+      if: steps.health-check-green.outcome == 'success'
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
