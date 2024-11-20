@@ -125,7 +125,7 @@ jobs:
         fi
 
 
-    - name: Test
+    - name: Check env variables
       run: |
         set -e
         echo $BLUE_NAMESPACE
@@ -133,21 +133,17 @@ jobs:
         echo $GREEN_NAMESPACE
 
 
-    # - name: Update Kubernetes resources 
-    #   env:
-    #     DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-    #   run: |
-    #    cd ${{ env.KUSTOMIZE_PATH }}
-    #    kustomize edit set namespace hello-gitops
-    #    kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
-    #    kustomize edit set namespace ${{ evn.GREEN_NAMESPACE }}
-    #    cat kustomization.yaml
+    - name: Update Kubernetes resources 
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      run: |
+       cd ${{ env.KUSTOMIZE_PATH }}
+       kustomize edit set namespace hello-gitops
+       kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
+       kustomize edit set namespace ${{ evn.GREEN_NAMESPACE }}
+       cat kustomization.yaml
        
 
-    # - name: Test
-    #   run:|
-    #    echo $BLUE_NAMESPACE
-    #    echo $BLUE_IMAGE
 
         
     # - name: Commit files
