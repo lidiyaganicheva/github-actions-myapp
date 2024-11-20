@@ -110,11 +110,11 @@ jobs:
         else
           echo "GREEN_NAMESPACE="\""hello-gitops-green"\""" >> $GITHUB_ENV
 
-    - name: Test
-      run:|
-       echo $BLUE_NAMESPACE
-       echo $BLUE_IMAGE
-       echo $GREEN_NAMESPACE
+      - name: Test
+        run:|
+        echo $BLUE_NAMESPACE
+        echo $BLUE_IMAGE
+        echo $GREEN_NAMESPACE
 
 
     # - name: Update Kubernetes resources 
