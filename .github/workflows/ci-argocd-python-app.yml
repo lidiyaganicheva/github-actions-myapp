@@ -90,6 +90,7 @@ jobs:
       CLUSTER_NAME: elisska-devops-aks-cluster
       KUSTOMIZE_PATH_V1: ${{ github.workspace }}/k8s_v1
       KUSTOMIZE_PATH_V2: ${{ github.workspace }}/k8s_v2
+      NAMESPACE_NAME: hello-gitops
 
     steps:
     - name: Check out code
@@ -134,7 +135,7 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
        cd ${{ env.KUSTOMIZE_PATH_V2 }}
-       kustomize edit set namespace hello-gitops
+       kustomize edit set namespace ${{ NAMESPACE_NAME }}
        kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
        cat kustomization.yaml
        
@@ -175,34 +176,79 @@ jobs:
         use-kubelogin: 'true'
 
 
-    # Runs Kustomize to create manifest files for v2
-    - name: Bake deployment
-      uses: azure/k8s-bake@v2
-      with:
-        renderEngine: "kustomize"
-        kustomizationPath: ${{ env.KUSTOMIZE_PATH_V2 }}
-        kubectl-version: latest
-      id: bake
+    # # Runs Kustomize to create manifest files for v2
+    # - name: Bake deployment
+    #   uses: azure/k8s-bake@v2
+    #   with:
+    #     renderEngine: "kustomize"
+    #     kustomizationPath: ${{ env.KUSTOMIZE_PATH_V2 }}
+    #     kubectl-version: latest
+    #   id: bake
 
-    - name: Create green workloads and configurations 
-      id: promote-app
-      uses: Azure/k8s-deploy@v4
-      with:
-        action: promote
-        manifests: ${{ steps.bake.outputs.manifestsBundle }}
-        strategy: blue-green
-        namespace: hello-gitops
-        route-method: ingress
+    # Set up kubectl
+    - name: Set up kubectl
+      run: |
+          az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }}
+
+
+    # Deploy to green
+    - name: Deploy version 2
+      run: |
+       cd ${{ env.KUSTOMIZE_PATH_V2 }}
+       kubectl apply -k ${{ env.KUSTOMIZE_PATH_V2 }}
+
+
+    # Check if green deployment healthy
+    - name: Health Check for Green Deployment
+      id: health-check-green
+      run: |
+        # Wait for the green deployment to roll out successfully
+        kubectl rollout status deployment/${{ env.GREEN_PREFIX }}hello-gitops -n ${{ NAMESPACE_NAME }}
+        echo steps.health-check-green.outcome
+
+
+
+    # If green deployment is ok - scale down the blue deployment
+      if: steps.health-check-green.outcome == 'success'
+      run: |
+        # Delete the blue deployment
+        cd ${{ env.KUSTOMIZE_PATH_V1 }}
+        kubectl delete -k .
+
+
+
+    
+
+
+  # - name: Create green workloads and configurations 
+  #     id: promote-app
+  #     uses: Azure/k8s-deploy@v4
+  #     with:
+  #       action: promote
+  #       manifests: ${{ steps.bake.outputs.manifestsBundle }}
+  #       strategy: blue-green
+  #       namespace: hello-gitops
+  #       route-method: ingress
+
+  #   - name: Create green workloads and configurations 
+  #     id: promote-app
+  #     uses: Azure/k8s-deploy@v4
+  #     with:
+  #       action: promote
+  #       manifests: ${{ steps.bake.outputs.manifestsBundle }}
+  #       strategy: blue-green
+  #       namespace: hello-gitops
+  #       route-method: ingress
 
 
   # If promotion is successful edit kustomize files
     - name: Update Kubernetes resources 
-      if: steps.promote-app.outcome == 'success'
+      if: steps.health-check-green.outcome == 'success'
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       run: |
        cd ${{ env.KUSTOMIZE_PATH_V1 }}
-       kustomize edit set namespace hello-gitops
+       kustomize edit set namespace ${{ NAMESPACE_NAME }}
        kustomize edit set namePrefix ${{ env.GREEN_PREFIX}}
        kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
        cat kustomization.yaml
@@ -226,26 +272,26 @@ jobs:
 
   # Next steps are applied if green deployment failed
 
-    # Runs Kustomize to create manifest files for v_1 
-    - name: Bake deployment 
-      if: steps.promote-app.outcome == 'failure'
-      uses: azure/k8s-bake@v2
-      with:
-        renderEngine: "kustomize"
-        kustomizationPath: ${{ env.KUSTOMIZE_PATH_V1 }}
-        kubectl-version: latest
-      id: bake_rollback
+    # # Runs Kustomize to create manifest files for v_1 
+    # - name: Bake deployment 
+    #   if: steps.promote-app.outcome == 'failure'
+    #   uses: azure/k8s-bake@v2
+    #   with:
+    #     renderEngine: "kustomize"
+    #     kustomizationPath: ${{ env.KUSTOMIZE_PATH_V1 }}
+    #     kubectl-version: latest
+    #   id: bake_rollback
       
 
-    - name: Delete green workloads and route traffic back (if green deploy fails)
-      uses: Azure/k8s-deploy@v4
-      if: steps.promote-app.outcome == 'failure'
-      with:
-        action: reject
-        manifests: ${{ steps.bake_rollback.outputs.manifestsBundle }}
-        strategy: blue-green
-        namespace: hello-gitops
-        route-method: ingress
+    # - name: Delete green workloads and route traffic back (if green deploy fails)
+    #   uses: Azure/k8s-deploy@v4
+    #   if: steps.promote-app.outcome == 'failure'
+    #   with:
+    #     action: reject
+    #     manifests: ${{ steps.bake_rollback.outputs.manifestsBundle }}
+    #     strategy: blue-green
+    #     namespace: hello-gitops
+    #     route-method: ingress
 
 
     
