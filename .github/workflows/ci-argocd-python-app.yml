@@ -112,9 +112,9 @@ jobs:
         fi
 
 
-
     - name: Test
-        run: |
+      run: |
+        set -e
         echo $BLUE_NAMESPACE
         echo $BLUE_IMAGE
         echo $GREEN_NAMESPACE
