@@ -114,7 +114,9 @@ jobs:
         set -e
         cd ${{ env.KUSTOMIZE_PATH }}
         echo "BLUE_NAMESPACE=$(shyaml get-value namespace < kustomization.yaml)" >> $GITHUB_ENV
-        echo "BLUE_IMAGE=$(shyaml get-value images.newName:images.newTag < kustomization.yaml)" >> $GITHUB_ENV
+        newName=$(shyaml get-value images.0.newName < kustomization.yaml)
+        newTag=$(shyaml get-value images.0.newTag < kustomization.yaml)
+        echo "BLUE_IMAGE=${newName}:${newTag}" >> $GITHUB_ENV
         
         if [ "$BLUE_NAMESPACE" = "hello-gitops-green" ]; then
           echo "GREEN_NAMESPACE=\"hello-gitops-blue\"" >> $GITHUB_ENV
