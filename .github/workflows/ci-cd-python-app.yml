@@ -214,11 +214,11 @@ jobs:
       run: |
        cd ${{ env.KUSTOMIZE_PATH_V1 }}
        kustomize edit set namespace ${{ env.NAMESPACE_NAME }}
-       kustomize edit set namePrefix ${{ env.GREEN_PREFIX}}
+       kustomize edit set nameprefix ${{ env.GREEN_PREFIX}}
        kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
        cat kustomization.yaml
        cd ${{ env.KUSTOMIZE_PATH_V2 }}
-       kustomize edit set namePrefix ${{ env.BLUE_PREFIX}}
+       kustomize edit set nameprefix ${{ env.BLUE_PREFIX}}
        cat kustomization.yaml
 
     - name: Commit files
