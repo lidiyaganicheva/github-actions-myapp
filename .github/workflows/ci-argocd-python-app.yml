@@ -109,15 +109,15 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install shyaml
-        
+
 
     - name: Set env variable for pod names
       run: |
         set -e
         cd ${{ env.KUSTOMIZE_PATH_V1 }}
-        echo "BLUE_PREFIX=$(shyaml get-value namespace < kustomization.yaml)" >> $GITHUB_ENV
+        echo "BLUE_PREFIX=$(shyaml get-value namePrefix < kustomization.yaml)" >> $GITHUB_ENV
         cd ${{ env.KUSTOMIZE_PATH_V2 }}
-        echo "GREEN_PREFIX=$(shyaml get-value namespace < kustomization.yaml)" >> $GITHUB_ENV
+        echo "GREEN_PREFIX=$(shyaml get-value namePrefix < kustomization.yaml)" >> $GITHUB_ENV
 
 
 
@@ -126,7 +126,7 @@ jobs:
         set -e
         echo $BLUE_PREFIX
         echo $GREEN_PREFIX
-        echo pwd
+
 
 
     - name: Update Kubernetes resources 
@@ -193,7 +193,6 @@ jobs:
         strategy: blue-green
         namespace: hello-gitops
         route-method: ingress
-        version_switch_buffer: 0.5
 
 
   # If promotion is successful edit kustomize files
@@ -247,7 +246,7 @@ jobs:
         strategy: blue-green
         namespace: hello-gitops
         route-method: ingress
-        version-switch-buffer: 0.5
+
 
     
         
