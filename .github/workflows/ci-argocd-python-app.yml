@@ -209,6 +209,7 @@ jobs:
 
 
     # If green deployment is ok - scale down the blue deployment
+    - name: Delete the Blue Deployment
       if: steps.health-check-green.outcome == 'success'
       run: |
         # Delete the blue deployment
