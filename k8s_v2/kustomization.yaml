@@ -9,4 +9,4 @@ images:
 - name: hello-gitops
   newName: lidiyahanicheva/hello-gitops
   newTag: c101294db25118bff7881e8d3ff3949a658d3bf2
-namePrefix: blue-
+namePrefix: green-
