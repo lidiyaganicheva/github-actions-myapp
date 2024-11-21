@@ -53,7 +53,7 @@ jobs:
     - name: Set up Docker Buildx
       id: buildx
       uses: docker/setup-buildx-action@v2
-      
+  
     - name: Cache Docker layers
       uses: actions/cache@v3
       with:
@@ -66,7 +66,7 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-      
+
     - name: Build and push
       uses: docker/build-push-action@v5
       with:
@@ -105,12 +105,11 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: "3.10"
-        
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install shyaml
-
 
     - name: Set env variable for pod names
       run: |
@@ -120,15 +119,11 @@ jobs:
         cd ${{ env.KUSTOMIZE_PATH_V2 }}
         echo "GREEN_PREFIX=$(shyaml get-value namePrefix < kustomization.yaml)" >> $GITHUB_ENV
 
-
-
     - name: Check env variables
       run: |
         set -e
         echo $BLUE_PREFIX
         echo $GREEN_PREFIX
-
-
 
     - name: Update Kubernetes resources 
       env:
@@ -137,9 +132,8 @@ jobs:
        cd ${{ env.KUSTOMIZE_PATH_V2 }}
        kustomize edit set namespace ${{ env.NAMESPACE_NAME }}
        kustomize edit set image hello-gitops=$DOCKER_USERNAME/hello-gitops:$GITHUB_SHA
-       cat kustomization.yaml
+       cat kustomization.yaml     
        
-        
     - name: Commit files
       run: |
         git config --local user.email "action@github.com"
@@ -175,19 +169,16 @@ jobs:
         admin: 'false'
         use-kubelogin: 'true'
 
-
     # Set up kubectl
     - name: Set up kubectl
       run: |
           az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }}
-
 
     # Deploy to green
     - name: Deploy version 2
       run: |
        cd ${{ env.KUSTOMIZE_PATH_V2 }}
        kubectl apply -k ${{ env.KUSTOMIZE_PATH_V2 }}
-
 
     # Check if green deployment healthy
     - name: Health Check for Green Deployment
@@ -197,15 +188,13 @@ jobs:
         kubectl rollout status deployment/${{ env.GREEN_PREFIX }}hello-gitops -n ${{ env.NAMESPACE_NAME }}
         echo steps.health-check-green.outcome
 
-
-    # If green deployment is ok - scale down the blue deployment
+    # If green deployment is ok - delete the blue deployment
     - name: Delete the Blue Deployment
       if: steps.health-check-green.outcome == 'success'
       run: |
         # Delete the blue deployment
         cd ${{ env.KUSTOMIZE_PATH_V1 }}
         kubectl delete -k .
-
 
   # If promotion is successful edit kustomize files
     - name: Update Kubernetes resources 
